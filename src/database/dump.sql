@@ -20,5 +20,8 @@ CREATE TABLE produtores_juridicos (
     id_usuario INT UNIQUE REFERENCES usuarios(id_usuario) ON DELETE CASCADE,
     razao_social VARCHAR(255) NOT NULL,
     cnpj VARCHAR(14) UNIQUE NOT NULL,
-    endereco TEXT NOT NULL
+    endereco TEXT NOT NULL,
+    nome_completo VARCHAR(255) NOT NULL,
+    cpf VARCHAR(11) NOT NULL,
+    data_nascimento DATE NOT NULL
 );

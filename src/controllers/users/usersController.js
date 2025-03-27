@@ -53,6 +53,9 @@ const createUser = async (req, res) => {
         razao_social: body.razao_social,
         cnpj: body.cnpj,
         endereco: body.endereco,
+        nome_completo: body.nome_completo,
+        data_nascimento: body.data_nascimento,
+        cpf: body.cpf
       });
 
       delete juridicoInfo.cnpj;

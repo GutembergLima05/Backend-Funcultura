@@ -6,9 +6,9 @@ const criaObjJoi = (camposJoiObj) => Joi.object().keys(camposJoiObj).required(),
     email = Joi.string().email().required(),
     senha = Joi.string().min(8).max(72).required(),
     nome_completo = Joi.string().min(8).max(255).required(),
-    data_nascimento = Joi.string().isoDate(),
-    cpf = Joi.string().min(11).max(11),
-    endereco = Joi.string(),
+    data_nascimento = Joi.string().isoDate().required(),
+    cpf = Joi.string().min(11).max(11).required(),
+    endereco = Joi.string().required(),
     razao_social = Joi.string().min(5).max(255),
     cnpj = Joi.string().min(14).max(14)
 
