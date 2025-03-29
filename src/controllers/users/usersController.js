@@ -1,11 +1,14 @@
 const { msgJson } = require("../../utils/responseJson");
 const { knex } = require("../../database/connectionDb");
 const { compare, hash } = require("bcrypt");
+const { validarCamposObrigatorios } = require("../../utils/util");
 const jwt = require("jsonwebtoken");
 
 const createUser = async (req, res) => {
   const { senha } = req.body;
   const { body, dataUnique } = req;
+  let fisicoInfo = null;
+  let juridicoInfo = null;
 
   try {
     if (dataUnique && dataUnique.field)
@@ -16,60 +19,67 @@ const createUser = async (req, res) => {
         false
       );
 
-    body.senha = await hash(senha, 10);
-    const [userInfo] = await knex("usuarios")
-      .insert({
-        email: body.email,
-        senha: body.senha,
-        tipo_usuario: body.tipo_usuario,
-      })
-      .returning("*");
+    const result = await knex.transaction(async (trx) => {
+      body.senha = await hash(senha, 10);
+      const [userInfo] = await trx("usuarios")
+        .insert({
+          email: body.email,
+          senha: body.senha,
+          tipo_usuario: body.tipo_usuario,
+        })
+        .returning("*");
 
-    if (body.tipo_usuario === "fisico") {
-      const camposParaValidar = ["data_nascimento", "nome_completo", "cpf"];
-      const validacao = validarCamposObrigatorios(body, camposParaValidar);
-      if (!validacao.valido) {
-        return msgJson(400, res, validacao.mensagem, false);
+      if (body.tipo_usuario === "fisico") {
+        const camposParaValidar = ["data_nascimento", "nome_completo", "cpf"];
+        const validacao = validarCamposObrigatorios(body, camposParaValidar);
+        if (!validacao.valido) {
+          throw new Error(validacao.mensagem);
+        }
+        [fisicoInfo] = await trx("produtores_fisicos")
+          .insert({
+            id_usuario: userInfo.id_usuario,
+            nome_completo: body.nome_completo,
+            data_nascimento: body.data_nascimento,
+            cpf: body.cpf,
+            endereco: body.endereco,
+          })
+          .returning("*");
+
+        delete fisicoInfo.cpf;
       }
-      const [fisicoInfo] = await knex("produtores_fisicos").insert({
-        id_usuario: userInfo.id,
-        nome_completo: body.nome_completo,
-        data_nascimento: body.data_nascimento,
-        cpf: body.cpf,
-        endereco: body.endereco,
-      });
 
-      delete fisicoInfo.cpf;
-    }
-
-    if (body.tipo_usuario === "juridico") {
+      if (body.tipo_usuario === "juridico") {
         const camposParaValidar = ["razao_social", "cnpj"];
         const validacao = validarCamposObrigatorios(body, camposParaValidar);
         if (!validacao.valido) {
-          return msgJson(400, res, validacao.mensagem, false);
+          throw new Error(validacao.mensagem);
         }
-      const [juridicoInfo] = await knex("produtores_juridicos").insert({
-        id_usuario: userInfo.id,
-        razao_social: body.razao_social,
-        cnpj: body.cnpj,
-        endereco: body.endereco,
-        nome_completo: body.nome_completo,
-        data_nascimento: body.data_nascimento,
-        cpf: body.cpf
-      });
+        [juridicoInfo] = await trx("produtores_juridicos")
+          .insert({
+            id_usuario: userInfo.id_usuario,
+            razao_social: body.razao_social,
+            cnpj: body.cnpj,
+            endereco: body.endereco,
+            nome_completo: body.nome_completo,
+            data_nascimento: body.data_nascimento,
+            cpf: body.cpf
+          })
+          .returning("*");
 
-      delete juridicoInfo.cnpj;
-    }
+        delete juridicoInfo.cnpj;
+      }
 
-    delete userInfo.senha;
+      delete userInfo.senha;
+      return { userInfo, fisicoInfo, juridicoInfo };
+    });
 
-    msgJson(201, res, { userInfo, fisicoInfo, juridicoInfo }, true);
+    msgJson(201, res, result, true);
   } catch (error) {
     console.error(error);
     msgJson(
-      500,
+      400,
       res,
-      "Erro interno do servidor ao cadastrar administrador.",
+      error.message || "Erro interno do servidor ao cadastrar administrador.",
       false
     );
   }
