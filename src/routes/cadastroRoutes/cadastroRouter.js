@@ -5,7 +5,7 @@ const documentos = require('../../controllers/cadastro/cadastroController');
 const { 
     validarDocumentosPF,
     validarDocumentosPJ 
-} = require('../../middlewares/validacaoDocumentos');
+} = require('../../utils/util');
 
 const routeDocumentos = Router();
 
