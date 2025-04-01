@@ -1,7 +1,7 @@
 const { Router } = require("express");
 const { validateEntry } = require("../../middlewares/middleware");
 const upload = require('../../config/multer');
-const documentos = require('../../controllers/documentos/documentosController');
+const documentos = require('../../controllers/cadastro/cadastroController');
 const { 
     validarDocumentosPF,
     validarDocumentosPJ 
