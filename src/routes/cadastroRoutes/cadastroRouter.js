@@ -3,21 +3,21 @@ const { validateEntry } = require("../../middlewares/middleware");
 const upload = require('../../config/multer');
 const documentos = require('../../controllers/cadastro/cadastroController');
 const { 
-    validarDocumentosPF,
+    //validarDocumentosPF,
     validarDocumentosPJ 
 } = require('../../utils/util');
 
 const routeDocumentos = Router();
 
 // Campos para upload PF
-const uploadFieldsPF = [
-    { name: 'documentoIdentidade', maxCount: 1 },
-    { name: 'cpf', maxCount: 1 },
-    { name: 'comprovanteResidencia', maxCount: 1 },
-    { name: 'curriculo', maxCount: 1 },
-    { name: 'certidaoRegularidade', maxCount: 1 },
-    { name: 'certidaoFuncultura', maxCount: 1 }
-];
+//const uploadFieldsPF = [
+//    { name: 'documentoIdentidade', maxCount: 1 },
+//    { name: 'cpf', maxCount: 1 },
+//    { name: 'comprovanteResidencia', maxCount: 1 },
+//    { name: 'curriculo', maxCount: 1 },
+//    { name: 'certidaoRegularidade', maxCount: 1 },
+//    { name: 'certidaoFuncultura', maxCount: 1 }
+//];
 
 // Campos para upload PJ
 const uploadFieldsPJ = [
@@ -31,12 +31,12 @@ const uploadFieldsPJ = [
 ];
 
 // Rotas para upload de documentos
-routeDocumentos.route('/documentos/upload-pf')
-    .post(
-        upload.fields(uploadFieldsPF),
-        validarDocumentosPF,
-        documentos.uploadDocumentosPF
-    );
+//routeDocumentos.route('/documentos/upload-pf')
+//    .post(
+//        upload.fields(uploadFieldsPF),
+//        validarDocumentosPF,
+//        documentos.uploadDocumentosPF
+//    );
 
 routeDocumentos.route('/documentos/upload-pj')
     .post(
@@ -46,17 +46,17 @@ routeDocumentos.route('/documentos/upload-pj')
     );
 
 // Rotas para renovação
-routeDocumentos.route('/documentos/renovacao-pf')
-    .post(
-        upload.fields([
-            { name: 'comprovanteResidencia', maxCount: 1 },
-            { name: 'certidaoRegularidade', maxCount: 1 },
-            { name: 'certidaoFuncultura', maxCount: 1 },
-            { name: 'curriculo', maxCount: 1 }
-        ]),
-        validarDocumentosPF,
-        documentos.renovacaoPF
-    );
+//routeDocumentos.route('/documentos/renovacao-pf')
+//    .post(
+ //       upload.fields([
+ //           { name: 'comprovanteResidencia', maxCount: 1 },
+ //           { name: 'certidaoRegularidade', maxCount: 1 },
+ //           { name: 'certidaoFuncultura', maxCount: 1 },
+  //          { name: 'curriculo', maxCount: 1 }
+  //      ]),
+  //      validarDocumentosPF,
+  //      documentos.renovacaoPF
+   // );
 
 routeDocumentos.route('/documentos/renovacao-pj')
     .post(
