@@ -15,6 +15,10 @@ const swaggerDefinition = {
       url: `http://localhost:${port}`,
       description: 'Servidor de desenvolvimento',
     },
+    {
+      url: `https://funcultura.fourdevs.com.br`,
+      description: 'Servidor de produção',
+    },
   ],
   components: {
     securitySchemes: {
