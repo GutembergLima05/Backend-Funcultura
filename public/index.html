@@ -1,0 +1,254 @@
+<!DOCTYPE html>
+<html lang="pt-BR">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Visualizador de Documentos</title>
+    <style>
+        body {
+            font-family: Arial, sans-serif;
+            max-width: 1200px;
+            margin: 0 auto;
+            padding: 20px;
+        }
+        .documento {
+            border: 1px solid #ccc;
+            padding: 20px;
+            margin-bottom: 20px;
+            border-radius: 5px;
+        }
+        .documento h2 {
+            margin-top: 0;
+            color: #333;
+        }
+        .documento-info {
+            margin-bottom: 15px;
+        }
+        .documento-info p {
+            margin: 5px 0;
+        }
+        .documento-arquivos {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: 20px;
+        }
+        .arquivo {
+            border: 1px solid #ddd;
+            padding: 15px;
+            border-radius: 5px;
+        }
+        .arquivo h3 {
+            margin-top: 0;
+            color: #444;
+        }
+        .arquivo-acoes {
+            margin-top: 10px;
+        }
+        button {
+            background-color: #4CAF50;
+            color: white;
+            border: none;
+            padding: 8px 15px;
+            border-radius: 4px;
+            cursor: pointer;
+            margin-right: 10px;
+        }
+        button:hover {
+            background-color: #45a049;
+        }
+        .visualizador {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            z-index: 1000;
+        }
+        .visualizador-conteudo {
+            position: relative;
+            width: 90%;
+            height: 90%;
+            margin: 2% auto;
+            background: white;
+            padding: 20px;
+            border-radius: 5px;
+        }
+        .visualizador-conteudo iframe {
+            width: 100%;
+            height: calc(100% - 50px);
+            border: none;
+        }
+        .visualizador-conteudo button {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+        }
+        #loading {
+            text-align: center;
+            padding: 20px;
+            display: none;
+        }
+        .seletor-usuario {
+            margin-bottom: 20px;
+            padding: 10px;
+            background: #f5f5f5;
+            border-radius: 5px;
+        }
+        .seletor-usuario input {
+            padding: 8px;
+            margin-right: 10px;
+            border: 1px solid #ddd;
+            border-radius: 4px;
+        }
+    </style>
+</head>
+<body>
+    <h1>Visualizador de Documentos</h1>
+    
+    <div class="seletor-usuario">
+        <input type="number" id="userId" placeholder="ID do usuário" value="1">
+        <button onclick="carregarDocumentos()">Buscar Documentos</button>
+    </div>
+
+    <div id="loading">Carregando documentos...</div>
+    
+    <div id="documentos"></div>
+
+    <div id="visualizador" class="visualizador">
+        <div class="visualizador-conteudo">
+            <button onclick="fecharVisualizador()">Fechar</button>
+            <iframe id="visualizador-frame"></iframe>
+        </div>
+    </div>
+
+    <script>
+        // Função para converter base64 em blob
+        function base64ToBlob(base64, mimeType) {
+            const byteCharacters = atob(base64);
+            const byteArrays = [];
+
+            for (let offset = 0; offset < byteCharacters.length; offset += 512) {
+                const slice = byteCharacters.slice(offset, offset + 512);
+                const byteNumbers = new Array(slice.length);
+                
+                for (let i = 0; i < slice.length; i++) {
+                    byteNumbers[i] = slice.charCodeAt(i);
+                }
+                
+                const byteArray = new Uint8Array(byteNumbers);
+                byteArrays.push(byteArray);
+            }
+
+            return new Blob(byteArrays, { type: mimeType });
+        }
+
+        // Função para criar URL do blob
+        function createBlobUrl(base64, mimeType) {
+            const blob = base64ToBlob(base64, mimeType);
+            return URL.createObjectURL(blob);
+        }
+
+        // Função para visualizar documento
+        function visualizarDocumento(base64, mimeType, nome) {
+            const url = createBlobUrl(base64, mimeType);
+            const visualizador = document.getElementById('visualizador');
+            const frame = document.getElementById('visualizador-frame');
+            
+            frame.src = url;
+            visualizador.style.display = 'block';
+        }
+
+        // Função para fechar o visualizador
+        function fecharVisualizador() {
+            const visualizador = document.getElementById('visualizador');
+            const frame = document.getElementById('visualizador-frame');
+            
+            // Revoga a URL do blob
+            if (frame.src) {
+                URL.revokeObjectURL(frame.src);
+                frame.src = '';
+            }
+            
+            visualizador.style.display = 'none';
+        }
+
+        // Função para baixar documento
+        function baixarDocumento(base64, mimeType, nome) {
+            const url = createBlobUrl(base64, mimeType);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = nome;
+            document.body.appendChild(a);
+            a.click();
+            document.body.removeChild(a);
+            URL.revokeObjectURL(url);
+        }
+
+        // Função para carregar documentos
+        async function carregarDocumentos() {
+            const loading = document.getElementById('loading');
+            const documentosDiv = document.getElementById('documentos');
+            const userId = document.getElementById('userId').value;
+            
+            if (!userId) {
+                alert('Por favor, insira um ID de usuário');
+                return;
+            }
+            
+            loading.style.display = 'block';
+            documentosDiv.innerHTML = '';
+
+            try {
+                const response = await fetch(`http://localhost:4000/documentos/${userId}`);
+                const data = await response.json();
+
+                if (data.documentos) {
+                    data.documentos.forEach(doc => {
+                        const docElement = document.createElement('div');
+                        docElement.className = 'documento';
+                        
+                        docElement.innerHTML = `
+                            <h2>${doc.titulo}</h2>
+                            <div class="documento-info">
+                                <p><strong>Tipo de Cadastro:</strong> ${doc.tipo_cadastro}</p>
+                                <p><strong>Descrição:</strong> ${doc.descricao || 'Nenhuma'}</p>
+                                <p><strong>Data de Criação:</strong> ${new Date(doc.criado_em).toLocaleString()}</p>
+                            </div>
+                            <div class="documento-arquivos">
+                                ${Object.entries(doc.documentos).map(([key, arquivo]) => `
+                                    <div class="arquivo">
+                                        <h3>${arquivo.nome}</h3>
+                                        <p><strong>Tipo:</strong> ${arquivo.tipo}</p>
+                                        <div class="arquivo-acoes">
+                                            <button onclick="visualizarDocumento('${arquivo.dados}', '${arquivo.tipo}', '${arquivo.nome}')">
+                                                Visualizar
+                                            </button>
+                                            <button onclick="baixarDocumento('${arquivo.dados}', '${arquivo.tipo}', '${arquivo.nome}')">
+                                                Baixar
+                                            </button>
+                                        </div>
+                                    </div>
+                                `).join('')}
+                            </div>
+                        `;
+                        
+                        documentosDiv.appendChild(docElement);
+                    });
+                } else {
+                    documentosDiv.innerHTML = '<p>Nenhum documento encontrado para este usuário.</p>';
+                }
+            } catch (error) {
+                console.error('Erro ao carregar documentos:', error);
+                documentosDiv.innerHTML = '<p>Erro ao carregar documentos. Tente novamente mais tarde.</p>';
+            } finally {
+                loading.style.display = 'none';
+            }
+        }
+
+        // Carrega os documentos quando a página carregar
+        window.onload = carregarDocumentos;
+    </script>
+</body>
+</html> 

@@ -75,6 +75,9 @@ routeDocumentos.route("/documentos/renovacao-pj").post(
   documentos.renovacaoPJ
 );
 
+// Rota para buscar documentos
+routeDocumentos.route("/documentos/:id_usuario").get(documentos.getDocumentos);
+
 module.exports = {
   routeDocumentos,
 };

@@ -261,9 +261,81 @@ const renovacaoPJ = async (req, res) => {
     }
 };
 
+const getDocumentos = async (req, res) => {
+    try {
+        const { tipo_cadastro } = req.query;
+        const { id_usuario } = req.params;
+
+        if (!id_usuario) {
+            return res.status(400).json({ erro: 'ID do usuário é obrigatório' });
+        }
+
+        const query = knex('documentos')
+            .where('id_usuario', id_usuario);
+
+        // Se o tipo de cadastro for especificado, filtra por ele
+        if (tipo_cadastro) {
+            query.where('tipo_cadastro', tipo_cadastro);
+        }
+
+        const documentos = await query
+            .select('id', 'tipo_cadastro', 'titulo', 'descricao', 'documentos', 'criado_em', 'atualizado_em')
+            .orderBy('criado_em', 'desc');
+
+        if (documentos.length === 0) {
+            return res.status(404).json({ erro: 'Nenhum documento encontrado' });
+        }
+
+        // Processa os documentos para retornar as chaves e os dados dos documentos
+        const documentosProcessados = documentos.map(doc => {
+            // Verifica se documentos já é um objeto ou precisa ser parseado
+            let documentosObj;
+            try {
+                documentosObj = typeof doc.documentos === 'string' 
+                    ? JSON.parse(doc.documentos) 
+                    : doc.documentos;
+            } catch (error) {
+                console.error('Erro ao processar documentos:', error);
+                documentosObj = {};
+            }
+
+            // Cria um objeto com os dados dos documentos
+            const documentosComDados = {};
+            if (documentosObj && typeof documentosObj === 'object') {
+                Object.entries(documentosObj).forEach(([key, value]) => {
+                    if (value && typeof value === 'object') {
+                        // Verifica se o valor tem dados em base64
+                        if (value.base64) {
+                            documentosComDados[key] = {
+                                nome: value.nome || key,
+                                tipo: value.tipo || 'application/octet-stream',
+                                dados: value.base64
+                            };
+                        }
+                    }
+                });
+            }
+
+            return {
+                ...doc,
+                documentos: documentosComDados
+            };
+        });
+
+        return res.status(200).json({
+            mensagem: 'Documentos encontrados com sucesso',
+            documentos: documentosProcessados
+        });
+    } catch (erro) {
+        console.error('Erro ao buscar documentos:', erro);
+        return res.status(500).json({ erro: 'Erro ao buscar documentos' });
+    }
+};
+
 module.exports = {
     uploadDocumentosPF,
     uploadDocumentosPJ,
     renovacaoPF,
-    renovacaoPJ
+    renovacaoPJ,
+    getDocumentos
 };
