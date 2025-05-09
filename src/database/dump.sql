@@ -7,8 +7,7 @@ CREATE TABLE usuarios (
 );
 
 CREATE TABLE produtores_fisicos (
-    id_produtor SERIAL PRIMARY KEY,
-    id_usuario INT UNIQUE REFERENCES usuarios(id_usuario) ON DELETE CASCADE,
+    id_produtor UUID PRIMARY KEY DEFAULT gen_random_uuid(),
     nome_completo VARCHAR(255) NOT NULL,
     data_nascimento DATE NOT NULL,
     cpf VARCHAR(11) UNIQUE NOT NULL,
