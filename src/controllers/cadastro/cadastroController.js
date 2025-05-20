@@ -152,7 +152,7 @@ const renovacaoPF = async (req, res) => {
         } = req.files;
 
         // Validações
-        if (!comprovanteResidencia || !certidaoRegularidade || !certidaoFuncultura) {
+        if (!comprovanteResidencia || !certidaoRegularidade || !certidaoFuncultura || !curriculo) {
             return res.status(400).json({ erro: 'Documentos obrigatórios não fornecidos' });
         }
 
@@ -217,7 +217,7 @@ const renovacaoPJ = async (req, res) => {
         } = req.files;
 
         // Validações
-        if (!comprovanteEndereco || !certidaoRegularidade || !certidaoFuncultura || !cnpj) {
+        if (!comprovanteEndereco || !certidaoRegularidade || !certidaoFuncultura || !cnpj || contratoSocial) {
             return res.status(400).json({ erro: 'Documentos obrigatórios não fornecidos' });
         }
 
